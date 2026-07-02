@@ -38,6 +38,8 @@
     padding:16px 22px; margin-bottom:16px; box-shadow:var(--shadow); display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
   .vehicle-card label{font-size:.85rem; font-weight:600; white-space:nowrap;}
   .vehicle-card input{flex:1; min-width:220px; text-align:left; font-size:.95rem;}
+  .counter-line{text-align:center; font-size:.85rem; color:var(--muted); margin:0 0 16px;}
+  .counter-line strong{color:var(--accent); font-variant-numeric:tabular-nums;}
   .card{background:var(--card); border:1px solid var(--border); border-radius:14px;
     padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow);}
   .card h2{font-size:.9rem; font-weight:600; color:var(--text); margin-bottom:14px;
@@ -137,6 +139,8 @@
   <label for="vehicle">🚗 Qual é o seu veículo?</label>
   <input type="text" id="vehicle" placeholder="Ex.: Onix 1.0 Turbo 2022, Corolla XEi 2020...">
 </div>
+
+<div class="counter-line" id="counterLine" style="display:none"></div>
 
 <div class="kpis" id="kpis"></div>
 
@@ -608,6 +612,37 @@ document.addEventListener('blur', e=>{
 updateVehicleEcho();
 renderTaxRows();
 renderMaint();
+
+/* ---------- contador de simulações (Supabase) ---------- */
+const SB_URL = 'https://lmrdsffwclmjruuxcfhi.supabase.co';
+const SB_KEY = 'sb_publishable_dI1yiP2sqwielFrrnfGiWw_GNf8Qtmd';
+function sbRpc(fn){
+  return fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers:{ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+    body:'{}'
+  }).then(r => { if(!r.ok) throw new Error(r.status); return r.json(); });
+}
+function showCount(n){
+  n = parseInt(n, 10);
+  if(!isFinite(n) || n < 1) return;
+  const el = $('counterLine');
+  el.innerHTML = 'Ajudando mais de <strong>' + n.toLocaleString('pt-BR') + '</strong> '
+    + (n === 1 ? 'pessoa' : 'pessoas') + ' a ter na ponta do lápis o custo com o veículo 🚗';
+  el.style.display = 'block';
+}
+sbRpc('total_simulacoes').then(showCount).catch(()=>{});
+let simContada = false;
+try{ simContada = sessionStorage.getItem('cv-sim') === '1'; }catch(e){}
+document.addEventListener('input', function(e){
+  const el = e.target;
+  if(simContada) return;
+  if(el.id === 'vehicle' || el.id === 'amtCustom') return;
+  if(el.tagName !== 'INPUT' && el.tagName !== 'SELECT') return;
+  simContada = true;
+  try{ sessionStorage.setItem('cv-sim','1'); }catch(e2){}
+  sbRpc('incrementar_simulacoes').then(showCount).catch(()=>{});
+});
 </script>
 </body>
 </html>
