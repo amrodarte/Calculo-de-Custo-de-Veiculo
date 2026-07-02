@@ -28,7 +28,7 @@
     padding:28px 20px; max-width:1080px; margin:0 auto; font-size:15px; transition:background .2s;}
   header{margin-bottom:18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
   h1{font-size:1.3rem; font-weight:700; letter-spacing:-.01em; flex:1; min-width:220px;}
-  .toolbar{display:flex; gap:8px;}
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap;}
   .btn{padding:8px 14px; border-radius:8px; border:1px solid var(--input-border); background:var(--card);
     color:var(--text); font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:all .12s;}
   .btn:hover{border-color:var(--accent); color:var(--accent);}
@@ -56,6 +56,8 @@
     border-radius:8px; font:inherit; font-size:.85rem; text-align:right; color:var(--text); transition:border .12s, box-shadow .12s;}
   input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.15);}
   input.name-in{text-align:left; width:100%; min-width:160px;}
+  select.mode-sel{padding:5px 4px; margin-left:4px; border:1px solid var(--input-border); background:var(--input-bg);
+    color:var(--text); border-radius:8px; font:inherit; font-size:.78rem; cursor:pointer;}
   .item-num{color:var(--muted); font-size:.75rem; margin-right:8px; font-variant-numeric:tabular-nums;}
   .hint{font-size:.75rem; color:var(--muted); margin-top:10px;}
   .hint a{color:var(--accent); text-decoration:none;}
@@ -126,6 +128,7 @@
   <h1>Calculadora de Custo de Veículo</h1>
   <div class="toolbar">
     <button class="btn" id="themeBtn" title="Alternar tema claro/escuro">🌙 Tema</button>
+    <button class="btn" id="pixBtnTop" title="Apoiar o site com um café via Pix">☕ Apoiar</button>
     <button class="btn primary" id="pdfBtn" title="Baixar resultado em PDF">⬇ Baixar PDF</button>
   </div>
 </header>
@@ -140,8 +143,8 @@
 <div class="card">
   <h2>Distância Percorrida</h2>
   <div class="tscroll"><table>
-    <tr><td class="wrap">Trecho Rodoviário (por mês)</td><td class="num"><input class="ni" id="kmRod" value="240"> km</td></tr>
-    <tr><td class="wrap">Trecho Urbano (por mês)</td><td class="num"><input class="ni" id="kmUrb" value="640"> km</td></tr>
+    <tr><td class="wrap">Trecho Rodoviário (por mês)</td><td class="num"><input class="ni" id="kmRod" value="0"> km</td></tr>
+    <tr><td class="wrap">Trecho Urbano (por mês)</td><td class="num"><input class="ni" id="kmUrb" value="0"> km</td></tr>
     <tr class="total"><td>Total mensal</td><td class="num" id="kmTotal"></td></tr>
   </table></div>
 </div>
@@ -153,14 +156,14 @@
     <tbody>
       <tr>
         <td class="wrap"><span class="item-num">1.1</span>Rodovia</td>
-        <td class="num"><input class="ni" id="kmlRod" value="13,2"></td>
-        <td class="num"><input class="ni" id="prRod" value="5,99"></td>
+        <td class="num"><input class="ni" id="kmlRod" value="0"></td>
+        <td class="num"><input class="ni" id="prRod" value="0"></td>
         <td class="num" id="fuelRodM"></td><td class="num" id="fuelRodP"></td><td class="num" id="fuelRodA"></td>
       </tr>
       <tr>
         <td class="wrap"><span class="item-num">1.2</span>Cidade</td>
-        <td class="num"><input class="ni" id="kmlUrb" value="11"></td>
-        <td class="num"><input class="ni" id="prUrb" value="5,99"></td>
+        <td class="num"><input class="ni" id="kmlUrb" value="0"></td>
+        <td class="num"><input class="ni" id="prUrb" value="0"></td>
         <td class="num" id="fuelUrbM"></td><td class="num" id="fuelUrbP"></td><td class="num" id="fuelUrbA"></td>
       </tr>
       <tr class="total"><td colspan="3">Totais</td><td class="num" id="fuelTotM"></td><td class="num">100%</td><td class="num" id="fuelTotA"></td></tr>
@@ -182,9 +185,10 @@
   <div class="card">
     <h2>3. Tributos e Outros <span class="subtotal" id="subTax"></span></h2>
     <div class="tscroll"><table>
-      <thead><tr><th>Item</th><th class="num">Valor</th><th class="num">Mensal</th><th class="num">Anual</th></tr></thead>
+      <thead><tr><th>Item</th><th class="num">Valor</th><th class="num">Mensal</th><th class="num">Anual</th><th></th></tr></thead>
       <tbody id="taxBody"></tbody>
     </table></div>
+    <button class="btn-add" id="btnAddTax">+ Adicionar item</button>
   </div>
 
   <div>
@@ -200,7 +204,7 @@
     <div class="card">
       <h2>5. Depreciação <span class="subtotal" id="subDep"></span></h2>
       <div class="tscroll"><table>
-        <tr><td class="wrap"><span class="item-num">5.1</span>Preço FIPE do carro</td><td class="num"><input class="ni" id="fipe" value="106.000"></td></tr>
+        <tr><td class="wrap"><span class="item-num">5.1</span>Preço FIPE do carro</td><td class="num"><input class="ni" id="fipe" value="0"></td></tr>
         <tr><td class="wrap"><span class="item-num">5.2</span>Taxa de depreciação anual (%)</td><td class="num"><input class="ni" id="depTaxa" value="0"> %</td></tr>
         <tr class="total"><td>Anual</td><td class="num" id="depAnual"></td></tr>
       </table></div>
@@ -295,35 +299,35 @@ function parseBR(s){
 
 /* ---------- estado ---------- */
 let maint = [
-  {name:'Filtro de combustível (externo ao tanque)', km:10000, price:100},
-  {name:'Filtro de óleo', km:10000, price:60},
-  {name:'Óleo do motor e anel de vedação do bujão', km:10000, price:200},
-  {name:'Filtro do Ar-Condicionado', km:20000, price:60},
-  {name:'Fluido de freio/embreagem', km:30000, price:250},
-  {name:'Filtro de Ar do Motor', km:40000, price:60},
-  {name:'Correia de Acionamento (Agregados)', km:50000, price:1170},
-  {name:'Correia Sincronizadora', km:90000, price:540},
-  {name:'Tensionador/Correia de Distribuição', km:90000, price:540},
-  {name:'Velas de Ignição', km:100000, price:250},
-  {name:'Pastilhas de Freio Dianteiro', km:20000, price:300},
-  {name:'Pastilhas de Freio Traseiro', km:40000, price:300},
-  {name:'Limpadores de Parabrisa (diant. + tras.)', km:10560, price:120},
-  {name:'Jogo com 4 Pneus', km:25000, price:2200},
-  {name:'Alinhamento', km:12500, price:70},
-  {name:'Balanceamento', km:25000, price:60},
-  {name:'Amortecedores', km:90000, price:1560},
-  {name:'Troca de Óleo do Câmbio Automático', km:60000, price:1200},
+  {name:'Filtro de combustível (externo ao tanque)', km:0, price:0},
+  {name:'Filtro de óleo', km:0, price:0},
+  {name:'Óleo do motor e anel de vedação do bujão', km:0, price:0},
+  {name:'Filtro do Ar-Condicionado', km:0, price:0},
+  {name:'Fluido de freio/embreagem', km:0, price:0},
+  {name:'Filtro de Ar do Motor', km:0, price:0},
+  {name:'Correia de Acionamento (Agregados)', km:0, price:0},
+  {name:'Correia Sincronizadora', km:0, price:0},
+  {name:'Tensionador/Correia de Distribuição', km:0, price:0},
+  {name:'Velas de Ignição', km:0, price:0},
+  {name:'Pastilhas de Freio Dianteiro', km:0, price:0},
+  {name:'Pastilhas de Freio Traseiro', km:0, price:0},
+  {name:'Limpadores de Parabrisa (diant. + tras.)', km:0, price:0},
+  {name:'Jogo com 4 Pneus', km:0, price:0},
+  {name:'Alinhamento', km:0, price:0},
+  {name:'Balanceamento', km:0, price:0},
+  {name:'Amortecedores', km:0, price:0},
+  {name:'Troca de Óleo do Câmbio Automático', km:0, price:0},
 ];
 
-const taxItems = [
-  ['IPVA','A',3508.60],
-  ['Seguro Obrigatório DPVAT','A',60],
-  ['Licenciamento','A',39.36],
-  ['Seguro Particular','A',2369.97],
-  ['Estacionamento','M',0],
-  ['Lavagem','M',60],
-  ['Pedágio','M',31.60],
-  ['Área Azul — Zona de Restrição','M',0],
+let taxes = [
+  {name:'IPVA', mode:'A', v:0},
+  {name:'Seguro Obrigatório DPVAT', mode:'A', v:0},
+  {name:'Licenciamento', mode:'A', v:0},
+  {name:'Seguro Particular', mode:'A', v:0},
+  {name:'Estacionamento', mode:'M', v:0},
+  {name:'Lavagem', mode:'M', v:0},
+  {name:'Pedágio', mode:'M', v:0},
+  {name:'Área Azul — Zona de Restrição', mode:'M', v:0},
 ];
 
 const $ = id => document.getElementById(id);
@@ -359,7 +363,7 @@ function renderMaint(){
   calc();
 }
 $('btnAdd').addEventListener('click', ()=>{
-  maint.push({name:'Novo item', km:10000, price:0});
+  maint.push({name:'Novo item', km:0, price:0});
   renderMaint();
   const inputs = maintBody.querySelectorAll('input.name-in');
   const last = inputs[inputs.length-1];
@@ -370,13 +374,30 @@ maintBody.addEventListener('click', e=>{
   if(d !== undefined){ maint.splice(+d,1); renderMaint(); }
 });
 
-/* ---------- seção 3 ---------- */
+/* ---------- seção 3: render dinâmico ---------- */
 const taxBody = $('taxBody');
-taxBody.innerHTML = taxItems.map((it,i)=>`
-  <tr><td class="wrap"><span class="item-num">3.${i+1}</span>${it[0]}</td>
-    <td class="num"><input class="ni" id="tx${i}" value="${fmtNum(it[2])}" style="width:95px"> ${it[1]==='A'?'/ano':'/mês'}</td>
-    <td class="num" id="txm${i}"></td><td class="num" id="txa${i}"></td></tr>`).join('')
-  + `<tr class="total"><td colspan="2">Totais</td><td class="num" id="taxTotM"></td><td class="num" id="taxTotA"></td></tr>`;
+function renderTaxRows(){
+  taxBody.innerHTML = taxes.map((it,i)=>`
+    <tr>
+      <td class="wrap"><span class="item-num">3.${i+1}</span><input class="name-in" data-t="${i}" data-f="name" value="${it.name.replace(/"/g,'&quot;')}" style="min-width:130px"></td>
+      <td class="num"><input class="ni" data-t="${i}" data-f="v" value="${fmtNum(it.v)}" style="width:85px"><select class="mode-sel" data-t="${i}" data-f="mode"><option value="A"${it.mode==='A'?' selected':''}>/ano</option><option value="M"${it.mode==='M'?' selected':''}>/mês</option></select></td>
+      <td class="num" id="txm${i}"></td>
+      <td class="num" id="txa${i}"></td>
+      <td><button class="btn-del" data-delt="${i}" title="Remover item">✕</button></td>
+    </tr>`).join('')
+    + `<tr class="total"><td colspan="2">Totais</td><td class="num" id="taxTotM"></td><td class="num" id="taxTotA"></td><td></td></tr>`;
+}
+$('btnAddTax').addEventListener('click', ()=>{
+  taxes.push({name:'Novo item', mode:'M', v:0});
+  renderTaxRows(); calc();
+  const inputs = taxBody.querySelectorAll('input.name-in');
+  const last = inputs[inputs.length-1];
+  if(last){ last.focus(); last.select(); }
+});
+taxBody.addEventListener('click', e=>{
+  const d = e.target.dataset.delt;
+  if(d !== undefined){ taxes.splice(+d,1); renderTaxRows(); calc(); }
+});
 
 const catNames = ['1. Combustíveis','2. Manutenções Preventivas','3. Tributos e Outros','4. Financiamento','5. Depreciação','6. Custo de Oportunidade'];
 const donutColors = ['#3b82f6','#f59e0b','#8b5cf6','#ef4444','#10b981','#64748b'];
@@ -399,22 +420,27 @@ function calc(){
   const mVals = maint.map(it => it.km > 0 ? it.price * kmMes / it.km : 0);
   const maintTot = mVals.reduce((a,b)=>a+b,0);
   mVals.forEach((m,i)=>{
-    $('mm'+i).textContent = money(m);
-    $('ma'+i).textContent = money(m*12);
-    $('mpc'+i).textContent = maintTot ? fmtPct(m/maintTot) : '—';
+    const e1 = $('mm'+i), e2 = $('ma'+i), e3 = $('mpc'+i);
+    if(e1) e1.textContent = money(m);
+    if(e2) e2.textContent = money(m*12);
+    if(e3) e3.textContent = maintTot ? fmtPct(m/maintTot) : '—';
   });
-  $('maintTotM').textContent = money(maintTot); $('maintTotA').textContent = money(maintTot*12);
+  const eTm = $('maintTotM'), eTa = $('maintTotA');
+  if(eTm) eTm.textContent = money(maintTot);
+  if(eTa) eTa.textContent = money(maintTot*12);
   $('subMaint').textContent = money(maintTot) + ' /mês';
 
   let taxTotM = 0;
-  taxItems.forEach((it,i)=>{
-    const v = num('tx'+i);
-    const m = it[1]==='A' ? v/12 : v;
+  taxes.forEach((it,i)=>{
+    const m = it.mode==='A' ? it.v/12 : it.v;
     taxTotM += m;
-    $('txm'+i).textContent = money(m);
-    $('txa'+i).textContent = money(m*12);
+    const em = $('txm'+i), ea = $('txa'+i);
+    if(em) em.textContent = money(m);
+    if(ea) ea.textContent = money(m*12);
   });
-  $('taxTotM').textContent = money(taxTotM); $('taxTotA').textContent = money(taxTotM*12);
+  const eXm = $('taxTotM'), eXa = $('taxTotA');
+  if(eXm) eXm.textContent = money(taxTotM);
+  if(eXa) eXa.textContent = money(taxTotM*12);
   $('subTax').textContent = money(taxTotM) + ' /mês';
 
   const finM = num('finParc');
@@ -451,8 +477,11 @@ function calc(){
     <div class="kpi"><div class="label">R$ / dia</div><div class="value">${money(anual/365)}</div></div>
     <div class="kpi"><div class="label">Custo anual / FIPE</div><div class="value">${fipe?fmtPct(anual/fipe):'—'}</div></div>`;
 
+  const ipva = taxes.find(t => /ipva/i.test(t.name));
+  const ipvaAnual = ipva ? (ipva.mode==='A' ? ipva.v : ipva.v*12) : 0;
   $('fipeNote').textContent = fipe
-    ? `Custo mensal equivale a ${fmtPct(total/fipe)} do valor FIPE (${money(fipe)}). IPVA representa ${fmtPct(num('tx0')/fipe)} da FIPE.`
+    ? `Custo mensal equivale a ${fmtPct(total/fipe)} do valor FIPE (${money(fipe)}).`
+      + (ipvaAnual ? ` IPVA representa ${fmtPct(ipvaAnual/fipe)} da FIPE.` : '')
     : 'Informe o valor FIPE para ver os índices Custo/FIPE.';
 
   drawDonut(cats, total);
@@ -518,7 +547,9 @@ function updateQR(){
 }
 
 const pixModal = $('pixModal');
-$('pixBtn').addEventListener('click', ()=>{ pixModal.classList.add('open'); updateQR(); });
+function openPix(){ pixModal.classList.add('open'); updateQR(); }
+$('pixBtn').addEventListener('click', openPix);
+$('pixBtnTop').addEventListener('click', openPix);
 $('pixClose').addEventListener('click', ()=> pixModal.classList.remove('open'));
 pixModal.addEventListener('click', e=>{ if(e.target === pixModal) pixModal.classList.remove('open'); });
 
@@ -552,11 +583,18 @@ $('pixCopy').addEventListener('click', ()=>{
 /* ---------- eventos (delegação) ---------- */
 document.addEventListener('input', e=>{
   const el = e.target;
-  if(el.tagName !== 'INPUT' || el.id === 'vehicle' || el.id === 'amtCustom') return;
-  const i = el.dataset.i, f = el.dataset.f;
-  if(i !== undefined){
+  if(el.id === 'vehicle' || el.id === 'amtCustom') return;
+  if(el.tagName !== 'INPUT' && el.tagName !== 'SELECT') return;
+  const f = el.dataset.f;
+  if(el.dataset.i !== undefined){
+    const i = el.dataset.i;
     if(f === 'name') maint[i].name = el.value;
     else maint[i][f] = parseBR(el.value);
+  } else if(el.dataset.t !== undefined){
+    const t = el.dataset.t;
+    if(f === 'name') taxes[t].name = el.value;
+    else if(f === 'mode') taxes[t].mode = el.value;
+    else taxes[t].v = parseBR(el.value);
   }
   calc();
 });
@@ -568,6 +606,7 @@ document.addEventListener('blur', e=>{
 }, true);
 
 updateVehicleEcho();
+renderTaxRows();
 renderMaint();
 </script>
 </body>
