@@ -351,7 +351,7 @@ const maintBody = $('maintBody');
 function renderMaint(){
   maintBody.innerHTML = maint.map((it,i)=>`
     <tr>
-      <td class="wrap"><span class="item-num">2.${i+1}</span><input class="name-in" data-i="${i}" data-f="name" value="${it.name.replace(/"/g,'&quot;')}"></td>
+      <td class="wrap"><span class="item-num">2.${i+1}</span>${it.custom ? `<input class="name-in" data-i="${i}" data-f="name" value="${it.name.replace(/"/g,'&quot;')}">` : it.name}</td>
       <td class="num"><input class="ni" data-i="${i}" data-f="km" value="${fmtNum(it.km)}" style="width:90px"></td>
       <td class="num"><input class="ni" data-i="${i}" data-f="price" value="${fmtNum(it.price)}" style="width:85px"></td>
       <td class="num" id="mm${i}"></td>
@@ -363,7 +363,7 @@ function renderMaint(){
   calc();
 }
 $('btnAdd').addEventListener('click', ()=>{
-  maint.push({name:'Novo item', km:0, price:0});
+  maint.push({name:'Novo item', km:0, price:0, custom:true});
   renderMaint();
   const inputs = maintBody.querySelectorAll('input.name-in');
   const last = inputs[inputs.length-1];
@@ -379,7 +379,7 @@ const taxBody = $('taxBody');
 function renderTaxRows(){
   taxBody.innerHTML = taxes.map((it,i)=>`
     <tr>
-      <td class="wrap"><span class="item-num">3.${i+1}</span><input class="name-in" data-t="${i}" data-f="name" value="${it.name.replace(/"/g,'&quot;')}" style="min-width:130px"></td>
+      <td class="wrap"><span class="item-num">3.${i+1}</span>${it.custom ? `<input class="name-in" data-t="${i}" data-f="name" value="${it.name.replace(/"/g,'&quot;')}" style="min-width:130px">` : it.name}</td>
       <td class="num"><input class="ni" data-t="${i}" data-f="v" value="${fmtNum(it.v)}" style="width:85px"><select class="mode-sel" data-t="${i}" data-f="mode"><option value="A"${it.mode==='A'?' selected':''}>/ano</option><option value="M"${it.mode==='M'?' selected':''}>/mês</option></select></td>
       <td class="num" id="txm${i}"></td>
       <td class="num" id="txa${i}"></td>
@@ -388,7 +388,7 @@ function renderTaxRows(){
     + `<tr class="total"><td colspan="2">Totais</td><td class="num" id="taxTotM"></td><td class="num" id="taxTotA"></td><td></td></tr>`;
 }
 $('btnAddTax').addEventListener('click', ()=>{
-  taxes.push({name:'Novo item', mode:'M', v:0});
+  taxes.push({name:'Novo item', mode:'M', v:0, custom:true});
   renderTaxRows(); calc();
   const inputs = taxBody.querySelectorAll('input.name-in');
   const last = inputs[inputs.length-1];
