@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Custo de Veículo — quanto seu carro custa por mês</title>
+<meta name="description" content="Calculadora gratuita e interativa do custo real do seu veículo: combustível, manutenções preventivas, tributos, financiamento, depreciação e custo de oportunidade. Resultado mensal, anual, por km e por dia.">
+<meta property="og:title" content="Calculadora de Custo de Veículo">
+<meta property="og:description" content="Descubra quanto seu carro realmente custa por mês, por km e por dia.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%232563eb'/%3E%3Ctext x='32' y='42' font-size='30' text-anchor='middle' fill='white' font-family='Arial'%3ER%24%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --border:#e8eaf0; --text:#111827; --muted:#6b7280;
+    --accent:#2563eb; --accent-soft:#eff6ff; --note-border:#dbeafe; --note-text:#475569;
+    --input-bg:#ffffff; --input-border:#d7dbe3; --total-bg:#fafbfc; --bar-bg:#eef1f5;
+    --shadow:0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
+  }
+  html[data-theme="dark"]{
+    --bg:#0f1218; --card:#171c26; --border:#262d3a; --text:#e6e9f0; --muted:#8b93a3;
+    --accent:#60a5fa; --accent-soft:#1a2436; --note-border:#2b3a52; --note-text:#a8b3c4;
+    --input-bg:#0f1420; --input-border:#3a4356; --total-bg:#1b212d; --bar-bg:#0f1420;
+    --shadow:none;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:Inter,'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text);
+    padding:28px 20px; max-width:1080px; margin:0 auto; font-size:15px; transition:background .2s;}
+  header{margin-bottom:18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  h1{font-size:1.3rem; font-weight:700; letter-spacing:-.01em; flex:1; min-width:220px;}
+  .toolbar{display:flex; gap:8px;}
+  .btn{padding:8px 14px; border-radius:8px; border:1px solid var(--input-border); background:var(--card);
+    color:var(--text); font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:all .12s;}
+  .btn:hover{border-color:var(--accent); color:var(--accent);}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btn.primary:hover{opacity:.9; color:#fff;}
+  .vehicle-card{background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:16px 22px; margin-bottom:16px; box-shadow:var(--shadow); display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .vehicle-card label{font-size:.85rem; font-weight:600; white-space:nowrap;}
+  .vehicle-card input{flex:1; min-width:220px; text-align:left; font-size:.95rem;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow);}
+  .card h2{font-size:.9rem; font-weight:600; color:var(--text); margin-bottom:14px;
+    display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap;}
+  .card h2 .subtotal{font-size:.9rem; color:var(--accent); font-weight:700; font-variant-numeric:tabular-nums;}
+  .tscroll{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:.85rem; font-variant-numeric:tabular-nums;}
+  th{text-align:left; color:var(--muted); font-weight:500; font-size:.72rem; text-transform:uppercase;
+    letter-spacing:.04em; padding:6px 8px; border-bottom:1px solid var(--border); white-space:nowrap;}
+  th.num, td.num{text-align:right;}
+  td{padding:7px 8px; border-bottom:1px solid var(--border); white-space:nowrap;}
+  td.wrap{white-space:normal;}
+  tr:last-child td{border-bottom:none;}
+  tr.total td{font-weight:700; border-top:1px solid var(--border); background:var(--total-bg);}
+  input{width:100px; padding:5px 8px; border:1px solid var(--input-border); background:var(--input-bg);
+    border-radius:8px; font:inherit; font-size:.85rem; text-align:right; color:var(--text); transition:border .12s, box-shadow .12s;}
+  input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+  input.name-in{text-align:left; width:100%; min-width:160px;}
+  .item-num{color:var(--muted); font-size:.75rem; margin-right:8px; font-variant-numeric:tabular-nums;}
+  .hint{font-size:.75rem; color:var(--muted); margin-top:10px;}
+  .hint a{color:var(--accent); text-decoration:none;}
+  .hint a:hover{text-decoration:underline;}
+  .note{font-size:.78rem; color:var(--note-text); background:var(--accent-soft); border:1px solid var(--note-border);
+    padding:9px 12px; border-radius:8px; margin-top:12px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:12px; margin-bottom:16px;}
+  .kpi{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:var(--shadow);}
+  .kpi .label{font-size:.7rem; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.04em;}
+  .kpi .value{font-size:1.3rem; font-weight:700; margin-top:6px; letter-spacing:-.01em; font-variant-numeric:tabular-nums;}
+  .kpi.main .value{color:var(--accent);}
+  .bar{height:6px; border-radius:3px; background:var(--bar-bg); overflow:hidden; min-width:60px;}
+  .pct-cell{display:flex; align-items:center; gap:8px; justify-content:flex-end;}
+  .pct-cell span{min-width:48px; text-align:right;}
+  .summary-flex{display:flex; gap:28px; align-items:center; flex-wrap:wrap;}
+  .summary-flex .tscroll{flex:1; min-width:300px;}
+  #donutWrap{flex:0 0 auto; margin:0 auto;}
+  .legend-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle;}
+  .btn-add{margin-top:12px; padding:7px 14px; border-radius:8px; border:1px solid var(--input-border); background:var(--card);
+    color:var(--accent); font:inherit; font-size:.8rem; font-weight:600; cursor:pointer;}
+  .btn-add:hover{border-color:var(--accent); background:var(--accent-soft);}
+  .btn-del{width:26px; padding:2px 0; border:none; background:transparent; color:var(--muted);
+    font-size:.85rem; cursor:pointer; border-radius:6px; opacity:.6;}
+  .btn-del:hover{color:#ef4444; opacity:1;}
+  .calc-val{color:var(--muted);}
+  footer{text-align:center; color:var(--muted); font-size:.78rem; margin:28px 0 10px; line-height:1.7;}
+  footer .donate-row{margin-bottom:10px;}
+  .modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:50; padding:16px;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:26px; max-width:380px; width:100%; text-align:center; max-height:92vh; overflow-y:auto;}
+  .modal h3{font-size:1rem; margin-bottom:8px;}
+  .modal p{font-size:.82rem; color:var(--muted); margin-bottom:14px;}
+  .amounts{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:12px;}
+  .amt{padding:8px 18px; border-radius:999px; border:1px solid var(--input-border); background:var(--card);
+    color:var(--text); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; transition:all .12s;}
+  .amt:hover{border-color:#e11d48;}
+  .amt.active{border-color:#e11d48; color:#e11d48; background:rgba(225,29,72,.08);}
+  #otherWrap{margin-bottom:12px;}
+  #otherWrap input{width:140px; text-align:center;}
+  #qrBox{background:#fff; padding:12px; border-radius:10px; width:224px; min-height:224px; margin:0 auto 10px;
+    display:flex; align-items:center; justify-content:center;}
+  #qrBox img, #qrBox canvas{display:block;}
+  .qr-hint{font-size:.75rem; color:var(--muted); margin-bottom:12px;}
+  @media(max-width:760px){
+    body{padding:14px 10px;}
+    .grid2{grid-template-columns:1fr;}
+    .card{padding:14px;}
+    table{font-size:.78rem;}
+    input{width:84px;}
+    .kpi .value{font-size:1.05rem;}
+  }
+  @media print{
+    html, html[data-theme="dark"]{--bg:#fff; --card:#fff; --border:#d1d5db; --text:#111; --muted:#555;
+      --accent:#2563eb; --accent-soft:#f3f4f6; --note-border:#d1d5db; --note-text:#444;
+      --input-bg:#fff; --input-border:#bbb; --total-bg:#f3f4f6; --bar-bg:#e5e7eb; --shadow:none;}
+    body{padding:0; max-width:none; font-size:12px;}
+    .toolbar, .btn-add, .btn-del, .donate-row, .modal-bg{display:none !important;}
+    .card, .kpi, .vehicle-card{box-shadow:none; break-inside:avoid;}
+    input{border:none; background:transparent; padding:2px;}
+    a{text-decoration:none; color:inherit;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Calculadora de Custo de Veículo</h1>
+  <div class="toolbar">
+    <button class="btn" id="themeBtn" title="Alternar tema claro/escuro">🌙 Tema</button>
+    <button class="btn primary" id="pdfBtn" title="Baixar resultado em PDF">⬇ Baixar PDF</button>
+  </div>
+</header>
+
+<div class="vehicle-card">
+  <label for="vehicle">🚗 Qual é o seu veículo?</label>
+  <input type="text" id="vehicle" placeholder="Ex.: Onix 1.0 Turbo 2022, Corolla XEi 2020...">
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="card">
+  <h2>Distância Percorrida</h2>
+  <div class="tscroll"><table>
+    <tr><td class="wrap">Trecho Rodoviário (por mês)</td><td class="num"><input class="ni" id="kmRod" value="240"> km</td></tr>
+    <tr><td class="wrap">Trecho Urbano (por mês)</td><td class="num"><input class="ni" id="kmUrb" value="640"> km</td></tr>
+    <tr class="total"><td>Total mensal</td><td class="num" id="kmTotal"></td></tr>
+  </table></div>
+</div>
+
+<div class="card">
+  <h2>1. Custos com Combustíveis <span class="subtotal" id="subFuel"></span></h2>
+  <div class="tscroll"><table>
+    <thead><tr><th>Consumo</th><th class="num">km/litro</th><th class="num">Preço (R$/L)</th><th class="num">Mensal</th><th class="num">%</th><th class="num">Anual</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="wrap"><span class="item-num">1.1</span>Rodovia</td>
+        <td class="num"><input class="ni" id="kmlRod" value="13,2"></td>
+        <td class="num"><input class="ni" id="prRod" value="5,99"></td>
+        <td class="num" id="fuelRodM"></td><td class="num" id="fuelRodP"></td><td class="num" id="fuelRodA"></td>
+      </tr>
+      <tr>
+        <td class="wrap"><span class="item-num">1.2</span>Cidade</td>
+        <td class="num"><input class="ni" id="kmlUrb" value="11"></td>
+        <td class="num"><input class="ni" id="prUrb" value="5,99"></td>
+        <td class="num" id="fuelUrbM"></td><td class="num" id="fuelUrbP"></td><td class="num" id="fuelUrbA"></td>
+      </tr>
+      <tr class="total"><td colspan="3">Totais</td><td class="num" id="fuelTotM"></td><td class="num">100%</td><td class="num" id="fuelTotA"></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<div class="card">
+  <h2>2. Custos com Manutenções Preventivas <span class="subtotal" id="subMaint"></span></h2>
+  <div class="tscroll"><table>
+    <thead><tr><th>Item</th><th class="num">Intervalo (km)</th><th class="num">Preço (R$)</th><th class="num">Mensal</th><th class="num">%</th><th class="num">Anual</th><th></th></tr></thead>
+    <tbody id="maintBody"></tbody>
+  </table></div>
+  <button class="btn-add" id="btnAdd">+ Adicionar item</button>
+  <div class="note"><strong>Observação:</strong> o preço (R$) de cada item deve considerar o preço do produto <strong>+ o serviço de troca</strong> (mão de obra). Custo mensal = preço ÷ (intervalo ÷ km rodados por mês).</div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>3. Tributos e Outros <span class="subtotal" id="subTax"></span></h2>
+    <div class="tscroll"><table>
+      <thead><tr><th>Item</th><th class="num">Valor</th><th class="num">Mensal</th><th class="num">Anual</th></tr></thead>
+      <tbody id="taxBody"></tbody>
+    </table></div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>4. Financiamento <span class="subtotal" id="subFin"></span></h2>
+      <div class="tscroll"><table>
+        <tr><td class="wrap"><span class="item-num">4.1</span>Parcela do Financiamento (mensal)</td><td class="num"><input class="ni" id="finParc" value="0"></td></tr>
+        <tr><td class="wrap"><span class="item-num">4.2</span>Valor já quitado (informativo)</td><td class="num"><input class="ni" id="finQuit" value="0"></td></tr>
+        <tr class="total"><td>Anual (parcelas)</td><td class="num" id="finAnual"></td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>5. Depreciação <span class="subtotal" id="subDep"></span></h2>
+      <div class="tscroll"><table>
+        <tr><td class="wrap"><span class="item-num">5.1</span>Preço FIPE do carro</td><td class="num"><input class="ni" id="fipe" value="106.000"></td></tr>
+        <tr><td class="wrap"><span class="item-num">5.2</span>Taxa de depreciação anual (%)</td><td class="num"><input class="ni" id="depTaxa" value="0"> %</td></tr>
+        <tr class="total"><td>Anual</td><td class="num" id="depAnual"></td></tr>
+      </table></div>
+      <div class="hint">FIPE: <a href="https://www.webmotors.com.br/tabela-fipe/" target="_blank" rel="noopener">webmotors.com.br/tabela-fipe</a> · Depreciação: <a href="https://www.carrosnaweb.com.br/compara.asp" target="_blank" rel="noopener">carrosnaweb.com.br</a></div>
+    </div>
+
+    <div class="card">
+      <h2>6. Custo de Oportunidade <span class="subtotal" id="subOpp"></span></h2>
+      <div class="tscroll"><table>
+        <tr><td class="wrap"><span class="item-num">6.1</span>Taxa CDI (% ao ano)</td><td class="num"><input class="ni" id="cdi" value="14,15"> %</td></tr>
+        <tr><td class="wrap"><span class="item-num">6.2</span>Rendimento da aplicação (% do CDI)</td><td class="num"><input class="ni" id="pctCdi" value="120"> %</td></tr>
+        <tr><td class="wrap"><span class="item-num">6.3</span>Rendimento equivalente</td><td class="num calc-val" id="oppRate"></td></tr>
+        <tr class="total"><td>Custo de oportunidade mensal</td><td class="num" id="oppM"></td></tr>
+      </table></div>
+      <div class="note">Calculado automaticamente: o valor FIPE do carro, se aplicado na <strong>Caixinha do Mercado Pago (120% do CDI)</strong>, renderia este valor por mês. CDI de referência: 14,15% a.a. (jun/2026) — atualize o campo 6.1 quando a taxa mudar. Rendimento bruto, sem descontar imposto de renda.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Resumo Final <span class="subtotal" id="vehicleEcho"></span></h2>
+  <div class="summary-flex">
+    <div class="tscroll"><table>
+      <thead><tr><th>Categoria</th><th class="num">Mensal</th><th class="num">Custo %</th></tr></thead>
+      <tbody id="sumBody"></tbody>
+    </table></div>
+    <div id="donutWrap"><svg id="donut" width="220" height="220" viewBox="0 0 220 220"></svg></div>
+  </div>
+  <div class="note" id="fipeNote"></div>
+</div>
+
+<footer>
+  <div class="donate-row">
+    <button class="btn primary" id="pixBtn">☕ Curtindo? Me ajude com um cafezinho — Apoiar via Pix</button>
+  </div>
+  © 2026 Alysson M. Rodarte — Todos os direitos reservados.<br>
+  Este site é uma ferramenta de estimativa; os valores calculados não constituem aconselhamento financeiro.
+</footer>
+
+<div class="modal-bg" id="pixModal">
+  <div class="modal">
+    <h3>Me pague um café ☕</h3>
+    <p>Curtiu o site? Me ajude com um cafezinho via Pix. Escolha o valor:</p>
+    <div class="amounts">
+      <button class="amt" data-v="1">R$ 1</button>
+      <button class="amt" data-v="3">R$ 3</button>
+      <button class="amt" data-v="5">R$ 5</button>
+      <button class="amt" data-v="10">R$ 10</button>
+      <button class="amt" data-v="other">Outro</button>
+    </div>
+    <div id="otherWrap" style="display:none">
+      <input id="amtCustom" inputmode="decimal" placeholder="R$ 0,00">
+    </div>
+    <div id="qrBox"></div>
+    <div class="qr-hint">Aponte a câmera do app do seu banco, ou copie o código:</div>
+    <button class="btn primary" id="pixCopy">Copiar código PIX</button>
+    <button class="btn" id="pixClose" style="margin-left:8px">Fechar</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ---------- tema ---------- */
+const root = document.documentElement;
+function setTheme(t){
+  root.dataset.theme = t;
+  try{ localStorage.setItem('cv-theme', t); }catch(e){}
+  document.getElementById('themeBtn').textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+}
+(function(){
+  let t = null;
+  try{ t = localStorage.getItem('cv-theme'); }catch(e){}
+  if(!t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  setTheme(t);
+})();
+document.getElementById('themeBtn').addEventListener('click', ()=> setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+/* ---------- formatação pt-BR ---------- */
+const fmt = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+const money = v => fmt.format(v);
+const fmtPct = v => (v*100).toLocaleString('pt-BR',{maximumFractionDigits:1}) + '%';
+const fmtNum = v => v.toLocaleString('pt-BR',{maximumFractionDigits:2});
+
+function parseBR(s){
+  s = String(s).trim().replace(/\s/g,'');
+  if(!s) return 0;
+  if(s.includes(',')){ s = s.replace(/\./g,'').replace(',','.'); }
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s)){ s = s.replace(/\./g,''); }
+  const v = parseFloat(s);
+  return isNaN(v) ? 0 : v;
+}
+
+/* ---------- estado ---------- */
+let maint = [
+  {name:'Filtro de combustível (externo ao tanque)', km:10000, price:100},
+  {name:'Filtro de óleo', km:10000, price:60},
+  {name:'Óleo do motor e anel de vedação do bujão', km:10000, price:200},
+  {name:'Filtro do Ar-Condicionado', km:20000, price:60},
+  {name:'Fluido de freio/embreagem', km:30000, price:250},
+  {name:'Filtro de Ar do Motor', km:40000, price:60},
+  {name:'Correia de Acionamento (Agregados)', km:50000, price:1170},
+  {name:'Correia Sincronizadora', km:90000, price:540},
+  {name:'Tensionador/Correia de Distribuição', km:90000, price:540},
+  {name:'Velas de Ignição', km:100000, price:250},
+  {name:'Pastilhas de Freio Dianteiro', km:20000, price:300},
+  {name:'Pastilhas de Freio Traseiro', km:40000, price:300},
+  {name:'Limpadores de Parabrisa (diant. + tras.)', km:10560, price:120},
+  {name:'Jogo com 4 Pneus', km:25000, price:2200},
+  {name:'Alinhamento', km:12500, price:70},
+  {name:'Balanceamento', km:25000, price:60},
+  {name:'Amortecedores', km:90000, price:1560},
+  {name:'Troca de Óleo do Câmbio Automático', km:60000, price:1200},
+];
+
+const taxItems = [
+  ['IPVA','A',3508.60],
+  ['Seguro Obrigatório DPVAT','A',60],
+  ['Licenciamento','A',39.36],
+  ['Seguro Particular','A',2369.97],
+  ['Estacionamento','M',0],
+  ['Lavagem','M',60],
+  ['Pedágio','M',31.60],
+  ['Área Azul — Zona de Restrição','M',0],
+];
+
+const $ = id => document.getElementById(id);
+const num = id => parseBR($(id).value);
+
+/* ---------- veículo ---------- */
+const vehicleInput = $('vehicle');
+try{ vehicleInput.value = localStorage.getItem('cv-vehicle') || ''; }catch(e){}
+vehicleInput.addEventListener('input', ()=>{
+  try{ localStorage.setItem('cv-vehicle', vehicleInput.value); }catch(e){}
+  updateVehicleEcho();
+});
+function updateVehicleEcho(){
+  const v = vehicleInput.value.trim();
+  $('vehicleEcho').textContent = v ? v.toUpperCase() : '';
+  document.title = v ? ('Custo de Veículo — ' + v) : 'Calculadora de Custo de Veículo — quanto seu carro custa por mês';
+}
+
+/* ---------- seção 2: render dinâmico ---------- */
+const maintBody = $('maintBody');
+function renderMaint(){
+  maintBody.innerHTML = maint.map((it,i)=>`
+    <tr>
+      <td class="wrap"><span class="item-num">2.${i+1}</span><input class="name-in" data-i="${i}" data-f="name" value="${it.name.replace(/"/g,'&quot;')}"></td>
+      <td class="num"><input class="ni" data-i="${i}" data-f="km" value="${fmtNum(it.km)}" style="width:90px"></td>
+      <td class="num"><input class="ni" data-i="${i}" data-f="price" value="${fmtNum(it.price)}" style="width:85px"></td>
+      <td class="num" id="mm${i}"></td>
+      <td class="num" id="mpc${i}"></td>
+      <td class="num" id="ma${i}"></td>
+      <td><button class="btn-del" data-del="${i}" title="Remover item">✕</button></td>
+    </tr>`).join('')
+    + `<tr class="total"><td colspan="3">Totais</td><td class="num" id="maintTotM"></td><td class="num">100%</td><td class="num" id="maintTotA"></td><td></td></tr>`;
+  calc();
+}
+$('btnAdd').addEventListener('click', ()=>{
+  maint.push({name:'Novo item', km:10000, price:0});
+  renderMaint();
+  const inputs = maintBody.querySelectorAll('input.name-in');
+  const last = inputs[inputs.length-1];
+  if(last){ last.focus(); last.select(); }
+});
+maintBody.addEventListener('click', e=>{
+  const d = e.target.dataset.del;
+  if(d !== undefined){ maint.splice(+d,1); renderMaint(); }
+});
+
+/* ---------- seção 3 ---------- */
+const taxBody = $('taxBody');
+taxBody.innerHTML = taxItems.map((it,i)=>`
+  <tr><td class="wrap"><span class="item-num">3.${i+1}</span>${it[0]}</td>
+    <td class="num"><input class="ni" id="tx${i}" value="${fmtNum(it[2])}" style="width:95px"> ${it[1]==='A'?'/ano':'/mês'}</td>
+    <td class="num" id="txm${i}"></td><td class="num" id="txa${i}"></td></tr>`).join('')
+  + `<tr class="total"><td colspan="2">Totais</td><td class="num" id="taxTotM"></td><td class="num" id="taxTotA"></td></tr>`;
+
+const catNames = ['1. Combustíveis','2. Manutenções Preventivas','3. Tributos e Outros','4. Financiamento','5. Depreciação','6. Custo de Oportunidade'];
+const donutColors = ['#3b82f6','#f59e0b','#8b5cf6','#ef4444','#10b981','#64748b'];
+
+/* ---------- cálculo ---------- */
+function calc(){
+  const kmRod = num('kmRod'), kmUrb = num('kmUrb'), kmMes = kmRod + kmUrb;
+  $('kmTotal').textContent = fmtNum(kmMes) + ' km';
+
+  const fRod = num('kmlRod') > 0 ? kmRod / num('kmlRod') * num('prRod') : 0;
+  const fUrb = num('kmlUrb') > 0 ? kmUrb / num('kmlUrb') * num('prUrb') : 0;
+  const fuelTot = fRod + fUrb;
+  $('fuelRodM').textContent = money(fRod); $('fuelUrbM').textContent = money(fUrb);
+  $('fuelRodA').textContent = money(fRod*12); $('fuelUrbA').textContent = money(fUrb*12);
+  $('fuelRodP').textContent = fuelTot ? fmtPct(fRod/fuelTot) : '—';
+  $('fuelUrbP').textContent = fuelTot ? fmtPct(fUrb/fuelTot) : '—';
+  $('fuelTotM').textContent = money(fuelTot); $('fuelTotA').textContent = money(fuelTot*12);
+  $('subFuel').textContent = money(fuelTot) + ' /mês';
+
+  const mVals = maint.map(it => it.km > 0 ? it.price * kmMes / it.km : 0);
+  const maintTot = mVals.reduce((a,b)=>a+b,0);
+  mVals.forEach((m,i)=>{
+    $('mm'+i).textContent = money(m);
+    $('ma'+i).textContent = money(m*12);
+    $('mpc'+i).textContent = maintTot ? fmtPct(m/maintTot) : '—';
+  });
+  $('maintTotM').textContent = money(maintTot); $('maintTotA').textContent = money(maintTot*12);
+  $('subMaint').textContent = money(maintTot) + ' /mês';
+
+  let taxTotM = 0;
+  taxItems.forEach((it,i)=>{
+    const v = num('tx'+i);
+    const m = it[1]==='A' ? v/12 : v;
+    taxTotM += m;
+    $('txm'+i).textContent = money(m);
+    $('txa'+i).textContent = money(m*12);
+  });
+  $('taxTotM').textContent = money(taxTotM); $('taxTotA').textContent = money(taxTotM*12);
+  $('subTax').textContent = money(taxTotM) + ' /mês';
+
+  const finM = num('finParc');
+  $('finAnual').textContent = money(finM*12);
+  $('subFin').textContent = money(finM) + ' /mês';
+
+  const fipe = num('fipe');
+  const depM = fipe * (num('depTaxa')/100) / 12;
+  $('depAnual').textContent = money(depM*12);
+  $('subDep').textContent = money(depM) + ' /mês';
+
+  const annualYield = (num('cdi')/100) * (num('pctCdi')/100);
+  const monthlyRate = Math.pow(1 + annualYield, 1/12) - 1;
+  const oppM = fipe * monthlyRate;
+  $('oppRate').textContent = (annualYield*100).toLocaleString('pt-BR',{maximumFractionDigits:2})
+    + '% a.a.  ·  ' + (monthlyRate*100).toLocaleString('pt-BR',{maximumFractionDigits:2}) + '% a.m.';
+  $('oppM').textContent = money(oppM);
+  $('subOpp').textContent = money(oppM) + ' /mês';
+
+  const cats = [fuelTot, maintTot, taxTotM, finM, depM, oppM];
+  const total = cats.reduce((a,b)=>a+b,0);
+
+  $('sumBody').innerHTML = cats.map((v,i)=>`
+    <tr><td class="wrap"><span class="legend-dot" style="background:${donutColors[i]}"></span>${catNames[i]}</td>
+    <td class="num">${money(v)}</td>
+    <td class="num"><div class="pct-cell"><div class="bar" style="width:70px"><div style="height:100%;width:${total?Math.round(v/total*100):0}%; background:${donutColors[i]}"></div></div><span>${total?fmtPct(v/total):'—'}</span></div></td></tr>`).join('')
+    + `<tr class="total"><td>CUSTO TOTAL</td><td class="num">${money(total)}</td><td class="num">100%</td></tr>`;
+
+  const anual = total*12;
+  $('kpis').innerHTML = `
+    <div class="kpi main"><div class="label">Custo mensal</div><div class="value">${money(total)}</div></div>
+    <div class="kpi"><div class="label">Custo anual</div><div class="value">${money(anual)}</div></div>
+    <div class="kpi"><div class="label">R$ / km</div><div class="value">${kmMes?money(total/kmMes):'—'}</div></div>
+    <div class="kpi"><div class="label">R$ / dia</div><div class="value">${money(anual/365)}</div></div>
+    <div class="kpi"><div class="label">Custo anual / FIPE</div><div class="value">${fipe?fmtPct(anual/fipe):'—'}</div></div>`;
+
+  $('fipeNote').textContent = fipe
+    ? `Custo mensal equivale a ${fmtPct(total/fipe)} do valor FIPE (${money(fipe)}). IPVA representa ${fmtPct(num('tx0')/fipe)} da FIPE.`
+    : 'Informe o valor FIPE para ver os índices Custo/FIPE.';
+
+  drawDonut(cats, total);
+}
+
+function drawDonut(cats, total){
+  const svg = $('donut');
+  const cx=110, cy=110, r=80, w=32;
+  if(total<=0){ svg.innerHTML=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bar-bg)" stroke-width="${w}"/>`; return; }
+  let html='', ang=-Math.PI/2;
+  cats.forEach((v,i)=>{
+    if(v<=0) return;
+    const sweep = Math.min(v/total*2*Math.PI, 2*Math.PI-0.0001);
+    const x1=cx+r*Math.cos(ang), y1=cy+r*Math.sin(ang);
+    const end = ang + sweep;
+    const x2=cx+r*Math.cos(end), y2=cy+r*Math.sin(end);
+    const large = sweep>Math.PI?1:0;
+    html += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" stroke="${donutColors[i]}" stroke-width="${w}"><title>${catNames[i]}: ${money(v)}</title></path>`;
+    ang = end;
+  });
+  html += `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="12" fill="var(--muted)">Total/mês</text>
+           <text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--text)">${money(total)}</text>`;
+  svg.innerHTML = html;
+}
+
+/* ---------- PDF (imprimir/salvar como PDF) ---------- */
+$('pdfBtn').addEventListener('click', ()=> window.print());
+
+/* ---------- Pix: BR Code (copia e cola) + QR ---------- */
+const PIX_KEY = 'alyssonmr@gmail.com';
+const PIX_NAME = 'ALYSSON M RODARTE';   // máx. 25 caracteres, sem acentos
+const PIX_CITY = 'BRASIL';              // máx. 15 caracteres, sem acentos
+
+function emv(id, v){ return id + String(v.length).padStart(2,'0') + v; }
+function crc16(s){
+  let c = 0xFFFF;
+  for(const ch of s){
+    c ^= ch.charCodeAt(0) << 8;
+    for(let i=0;i<8;i++){ c = (c & 0x8000) ? ((c<<1) ^ 0x1021) : (c<<1); c &= 0xFFFF; }
+  }
+  return c.toString(16).toUpperCase().padStart(4,'0');
+}
+function buildPix(amount){
+  const gui = emv('00','br.gov.bcb.pix') + emv('01',PIX_KEY);
+  let p = emv('00','01') + emv('26',gui) + emv('52','0000') + emv('53','986');
+  if(amount > 0) p += emv('54', amount.toFixed(2));
+  p += emv('58','BR') + emv('59',PIX_NAME) + emv('60',PIX_CITY) + emv('62', emv('05','***'));
+  p += '6304';
+  return p + crc16(p);
+}
+
+let pixAmount = 1;
+let pixPayload = '';
+function updateQR(){
+  pixPayload = buildPix(pixAmount);
+  const box = $('qrBox');
+  box.innerHTML = '';
+  if(window.QRCode){
+    new QRCode(box, {text:pixPayload, width:200, height:200, correctLevel:QRCode.CorrectLevel.M});
+  } else {
+    box.innerHTML = '<span style="color:#555;font-size:.75rem;padding:8px">QR indisponível offline —<br>use o botão Copiar código PIX.</span>';
+  }
+}
+
+const pixModal = $('pixModal');
+$('pixBtn').addEventListener('click', ()=>{ pixModal.classList.add('open'); updateQR(); });
+$('pixClose').addEventListener('click', ()=> pixModal.classList.remove('open'));
+pixModal.addEventListener('click', e=>{ if(e.target === pixModal) pixModal.classList.remove('open'); });
+
+document.querySelectorAll('.amt').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.amt').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if(btn.dataset.v === 'other'){
+      $('otherWrap').style.display = 'block';
+      pixAmount = parseBR($('amtCustom').value);
+      $('amtCustom').focus();
+    } else {
+      $('otherWrap').style.display = 'none';
+      pixAmount = parseFloat(btn.dataset.v);
+    }
+    updateQR();
+  });
+});
+document.querySelector('.amt[data-v="1"]').classList.add('active');
+$('amtCustom').addEventListener('input', ()=>{ pixAmount = parseBR($('amtCustom').value); updateQR(); });
+
+$('pixCopy').addEventListener('click', ()=>{
+  (navigator.clipboard ? navigator.clipboard.writeText(pixPayload) : Promise.reject()).then(()=>{
+    $('pixCopy').textContent = '✓ Código copiado!';
+    setTimeout(()=> $('pixCopy').textContent = 'Copiar código PIX', 2000);
+  }).catch(()=>{
+    prompt('Copie o código Pix:', pixPayload);
+  });
+});
+
+/* ---------- eventos (delegação) ---------- */
+document.addEventListener('input', e=>{
+  const el = e.target;
+  if(el.tagName !== 'INPUT' || el.id === 'vehicle' || el.id === 'amtCustom') return;
+  const i = el.dataset.i, f = el.dataset.f;
+  if(i !== undefined){
+    if(f === 'name') maint[i].name = el.value;
+    else maint[i][f] = parseBR(el.value);
+  }
+  calc();
+});
+document.addEventListener('blur', e=>{
+  const el = e.target;
+  if(el.tagName === 'INPUT' && el.classList.contains('ni')){
+    el.value = fmtNum(parseBR(el.value));
+  }
+}, true);
+
+updateVehicleEcho();
+renderMaint();
+</script>
+</body>
+</html>
