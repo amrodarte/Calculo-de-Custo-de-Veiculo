@@ -1,6 +1,6 @@
 # Calculadora de Custo de Veículo
 
-Site estático que calcula o custo real de um veículo por mês, ano, km e dia:
+Site que calcula o custo estimado de um veículo por mês, ano, km e dia:
 combustível, manutenções preventivas, tributos, financiamento, depreciação e
 custo de oportunidade (120% do CDI).
 
